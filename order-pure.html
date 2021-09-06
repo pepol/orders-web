@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/base-min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css" crossorigin="anonymous">
+    <title>Objednavka</title>
+    <style>
+      .button-green,
+      .button-red {
+        color: white;
+        border-radius: 1px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+      }
+
+      .button-green {
+        background: rgb(28, 184, 65);
+      }
+
+      .button-red {
+        background: rgb(202, 60, 60);
+      }
+
+     	.ui-autocomplete {
+    		position: absolute;
+    		z-index: 1000;
+    		cursor: default;
+    		padding: 0;
+    		margin-top: 2px;
+    		list-style: none;
+    		background-color: #ffffff;
+    		border: 1px solid #ccc;
+    		-webkit-border-radius: 5px;
+    		   -moz-border-radius: 5px;
+    		        border-radius: 5px;
+    		-webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    		   -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    		        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+			}
+
+			.ui-autocomplete > li {
+			  padding: 3px 20px;
+			}
+			
+			.ui-state-active {
+			  background-color: #DDD;
+			}
+			
+			.ui-helper-hidden-accessible {
+			  display: none;
+			}
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      $(function(){
+        $('form.pure-form').on('click', '.increment', function(){
+          var valueElement = $('#'+$(this).siblings('input.counter').attr('id'));
+
+          if ($(this).hasClass('plus')) {
+            valueElement.val(Math.max(parseInt(valueElement.val()) + 1, 0));
+          } else if ($(this).hasClass('minus')) {
+            valueElement.val(Math.max(parseInt(valueElement.val()) - 1, 0));
+          }
+          return false;
+        });
+
+        $('form.pure-form').on('click', '.adhoc-remove', function(){
+          var parentDiv = $('#'+$(this).parent().attr('id')).remove();
+          return false;
+        });
+
+        window.adhocItemsCount = 0;
+        $('form.pure-form').on('click', '#add-adhoc-item', function(){
+          var adhocItemID = window.adhocItemsCount;
+          var newDiv = $(this).parent().before('<div id="aligned-menu-adhoc-' + adhocItemID + '-div" class="pure-control-group"><input type="text" id="aligned-menu-adhoc-' + adhocItemID + '-name" class="pure-input-1-2 adhoc-item" placeholder="Adhoc Menu ' + adhocItemID + '" /> <button class="button-red pure-button increment minus"><i class="fa fa-minus"></i></button> <input type="text" id="aligned-menu-adhoc-' + adhocItemID + '-count" class="pure-input-1-4 counter" value="0" /> <button class="button-green pure-button increment plus"><i class="fa fa-plus"></i></button> <button class="pure-button pure-button-primary note"><i class="fa fa-pencil"></i></button> <button class="button-red pure-button adhoc-remove"><i class="fa fa-trash-o"></i></button></div');
+          window.adhocItemsCount++;
+          return false;
+        });
+
+        var foods = [
+          "Buchty na pare",
+          "Knedla",
+          "Langos",
+          "Polievka"
+        ];
+        $('form.pure-form').on('keydown.autocomplete', '.adhoc-item', function(){
+          $(this).autocomplete({
+            source: foods
+          });
+        });
+
+        $('form.pure-form').on('click', '.note', function(){
+          var parentID = $(this).parent().attr('id')
+          if ($('#'+parentID).children('.note-exists').length == 0) {
+            var noteElement = $('#'+parentID).append('<input type="text" id="'+parentID+'-note" class="pure-input-3-4 note-exists" placeholder="Poznamka" />');
+          } else {
+            $('#'+parentID).children('.note-exists').remove();
+          }
+          return false;
+        });
+
+        var customers = [
+          { id: 1, name: "Jan Hreha", address: "Vranov nad Toplou", contact: "+1234566" },
+          { id: 2, name: "Imrich Kosalko", address: "Dobrianskeho Vranov nad Toplou", contact: "+1234567" }
+        ];
+
+        function searchCustomers(req, resp) {
+          resp($.map(customers, function(obj, key) {
+            var name = obj.name.toUpperCase();
+            if (name.indexOf(req.term.toUpperCase()) != -1) {
+              return obj;
+            } else {
+              return null;
+            }
+          }));
+        };
+
+        $('form.pure-form').on('keydown.autocomplete', '#customer', function(){
+          $(this).autocomplete({
+            minLength: 0,
+            source: searchCustomers,
+            focus: function (ev, ui) {
+              $('#customer').val(ui.item.name);
+              return false;
+            },
+            select: function (ev, ui) {
+              $('#customer').val(ui.item.name);
+              $('#address').val(ui.item.address);
+              $('#contact').val(ui.item.contact);
+              console.log('CUSTOMER: '+ui.item.id);
+              return false;
+            },
+          }).autocomplete("instance")._renderItem = function (ul, item) {
+            return $("<li>")
+              .append("<div>" + item.name + "<br>" + item.address + "<br>" + item.contact + "</div>")
+              .appendTo(ul);
+          };
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="pure-g">
+      <div class="pure-u-1-5"></div>
+      <div class="pure-u-3-5">
+      <h1>Objednavka</h1>
+      <form class="pure-form pure-form-aligned">
+        <fieldset>
+          <div id="aligned-menu-1-div" class="pure-control-group">
+            <input type="text" id="aligned-menu-1-name" class="pure-input-1-2" value="Menu 1" readonly="" />
+            <button class="button-red pure-button increment minus"><i class="fa fa-minus"></i></button>
+            <input type="text" id="aligned-menu-1-count" class="pure-input-1-4 counter" value="0" />
+            <button class="button-green pure-button increment plus"><i class="fa fa-plus"></i></button>
+            <button class="pure-button pure-button-primary note"><i class="fa fa-pencil"></i></button>
+          </div>
+          <div id="aligned-menu-2-div" class="pure-control-group">
+            <input type="text" id="aligned-menu-1-name" class="pure-input-1-2" value="Menu 2" readonly="" />
+            <button class="button-red pure-button increment minus"><i class="fa fa-minus"></i></button>
+            <input type="text" id="aligned-menu-2-count" class="pure-input-1-4 counter" value="0" />
+            <button class="button-green pure-button increment plus"><i class="fa fa-plus"></i></button>
+            <button class="pure-button pure-button-primary note"><i class="fa fa-pencil"></i></button>
+          </div>
+          <div id="aligned-menu-3-div" class="pure-control-group">
+            <input type="text" id="aligned-menu-1-name" class="pure-input-1-2" value="Menu 3" readonly="" />
+            <button class="button-red pure-button increment minus"><i class="fa fa-minus"></i></button>
+            <input type="text" id="aligned-menu-3-count" class="pure-input-1-4 counter" value="0" />
+            <button class="button-green pure-button increment plus"><i class="fa fa-plus"></i></button>
+            <button class="pure-button pure-button-primary note"><i class="fa fa-pencil"></i></button>
+          </div>
+          <div class="pure-controls">
+            <button class="button-green pure-button" id="add-adhoc-item">Pridat polozku</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <div class="pure-control-group" id="customer-div">
+            <label for="customer">Zakaznik</label>
+            <input type="text" id="customer" class="pure-input-3-4" placeholder="Zakaznik" />
+          </div>
+          <div class="pure-control-group" id="address-div">
+            <label for="address">Adresa</label>
+            <input type="text" id="address" class="pure-input-3-4" placeholder="Adresa" />
+            <button class="pure-button pure-button-primary note"><i class="fa fa-pencil"></i></button>
+          </div>
+          <div class="pure-control-group" id="contact-div">
+            <label for="contact">Kontakt</label>
+            <input type="tel" id="contact" class="pure-input-3-4" placeholder="Telefonicky kontakt" />
+          </div>
+        </fieldset>
+        <fieldset>
+          <div class="pure-controls">
+            <button type="submit" class="pure-button pure-button-primary">Odoslat</button>
+          </div>
+        </fieldset>
+      </form>
+      </div>
+      <div class="pure-u-1-5"></div>
+    </div>
+  </body>
+</html>
